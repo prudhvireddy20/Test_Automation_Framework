@@ -1,0 +1,14 @@
+base_url: "https://avi-mock-api-production.up.railway.app"
+credentials:
+  username: "candidate_user"
+  password: "candidate_pass"
+target_vs_name: "backend-vs-t1r_1000-1"
+concurrency: 3
+logging:
+  level: INFO
+
+test_cases:
+  - name: disable-backend-vs-1
+    target_vs_name: "backend-vs-t1r_1000-1"
+  - name: sample-case-2
+    target_vs_name: "some-other-vs"
