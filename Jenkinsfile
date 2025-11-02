@@ -31,10 +31,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Automation completed successfully"
+            echo "Automation completed successfully"
         }
         failure {
-            echo "❌ Pipeline failed — Check logs"
+            echo "Pipeline failed — Check logs"
         }
     }
 }
