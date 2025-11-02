@@ -21,28 +21,31 @@ pipeline {
     }
 
     stage('Setup Environment') {
-      steps {
+    steps {
         sh '''
-          # ensure a writable pip cache in workspace
-          mkdir -p "${PIP_CACHE_DIR}"
-          export XDG_CACHE_HOME="${PIP_CACHE_DIR}"
+            echo "Creating virtual environment..."
+            python -m venv venv
 
-          # create venv first (this will be owned by the current user)
-          python -m venv ${VENV_DIR}
+            echo "Activating venv and installing dependencies..."
+            . venv/bin/activate
 
-          # activate venv and upgrade pip inside the venv, then install requirements
-          . ${VENV_DIR}/bin/activate
-          python -m pip install --upgrade pip setuptools wheel --no-cache-dir
-          pip install --no-cache-dir -r requirements.txt
+            # Ensure pip cache is in a writable location
+            mkdir -p ${WORKSPACE}/.cache
+            export XDG_CACHE_HOME=${WORKSPACE}/.cache
 
-          # sanity: print python & pip locations and versions
-          which python
-          python --version
-          which pip
-          pip --version
+            # Upgrade pip *inside* venv
+            python -m pip install --upgrade pip setuptools wheel --no-cache-dir
+
+            # Install project requirements
+            pip install --no-cache-dir -r requirements.txt
+
+            # Verify environment
+            python --version
+            pip list
         '''
-      }
     }
+}
+
 
     stage('Run Automation') {
       steps {
