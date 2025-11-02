@@ -1,70 +1,40 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.11-slim'
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                sh '''
+                python3 -m venv .venv
+                . .venv/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Run Automation') {
+            steps {
+                sh '''
+                . .venv/bin/activate
+                python3 main.py --config config.yml
+                '''
+            }
+        }
     }
-  }
 
-  environment {
-    VENV_DIR = 'venv'
-    PIP_CACHE_DIR = "${WORKSPACE}/.pip_cache"
-  }
-
-  options {
-    timestamps()
-    buildDiscarder(logRotator(numToKeepStr: '10'))
-  }
-
-  stages {
-    stage('Checkout') {
-      steps { checkout scm }
+    post {
+        success {
+            echo "✅ Automation completed successfully"
+        }
+        failure {
+            echo "❌ Pipeline failed — Check logs"
+        }
     }
-
-    stage('Setup Environment') {
-    steps {
-        sh '''
-            echo "Creating virtual environment..."
-            python -m venv venv
-
-            echo "Activating venv and installing dependencies..."
-            . venv/bin/activate
-
-            # Ensure pip cache is in a writable location
-            mkdir -p ${WORKSPACE}/.cache
-            export XDG_CACHE_HOME=${WORKSPACE}/.cache
-
-            # Upgrade pip *inside* venv
-            python -m pip install --upgrade pip setuptools wheel --no-cache-dir
-
-            # Install project requirements
-            pip install --no-cache-dir -r requirements.txt
-
-            # Verify environment
-            python --version
-            pip list
-        '''
-    }
-}
-
-
-    stage('Run Automation') {
-      steps {
-        sh '''
-          . ${VENV_DIR}/bin/activate
-          python main.py --config config.yml
-        '''
-      }
-    }
-  }
-
-  post {
-    success {
-      echo "Pipeline succeeded"
-      archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
-    }
-    failure {
-      echo "Pipeline failed — see console for details"
-      archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
-    }
-  }
 }
